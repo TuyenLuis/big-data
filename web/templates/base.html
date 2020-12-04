@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" href="/static/css/bootstrap.css">
+    </head>
+    <style type="text/css">
+        #content {
+            width: 780px;
+            float: left;
+            padding: 1em;
+        }
+        #related {
+            /* width: 380px;
+            float: right;
+            padding: 1em; */
+        }
+        body {
+            color: black;
+            background-color: white;
+        }
+        input[type="text"] {
+          /* width: 130px; */
+          box-sizing: border-box;
+          border: 1px solid black;
+          border-radius: 4px;
+          outline:none;
+          padding: 12px 14px;
+          transition:0.6s ease-in-out;
+        }
+    </style>
+    <body>
+        <div class="container-fluid" style="padding-left: 0; padding-right: 0;">
+            <nav class="navbar navbar-inverse"  style="border-radius: unset;">
+                <a class="navbar-brand" href="#">Quản lý bài viết</a>
+                <ul class="nav navbar-nav">
+                    <li class="active">
+                        <a href="/">Home</a>
+                    </li>
+                    <li>
+                        <a href="/posts/top">Top</a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="row" style="margin: auto;">
+                <div id="search" class="clearfix">
+                    {% block search %}{% endblock %}
+                </div>
+            </div>
+            <div class="row" style="margin: auto;">
+                <div id="content" class="clearfix">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+            <div class="row" style="margin: auto;">
+                <div id="post-content" class="col-md-9">
+                    {% block post_content %}{% endblock %}
+                 </div>
+                <div id="related" class="col-md-3">
+                    {% block related %}{% endblock %}
+                 </div>
+            </div>
+            <div class="row" style="margin: auto;">
+                <div class="clearfix">
+                    {% block detail %}{% endblock %}
+                 </div>
+            </div>
+        </div>
+        <script src="/static/js/jquery-3.3.1.js"></script>
+        <script src="/static/js/bootstrap.js"></script>
+    </body>
+</html>

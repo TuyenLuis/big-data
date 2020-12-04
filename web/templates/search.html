@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if search %}
+	<h2> Các bài viết liên quan tới từ khóa </h2>
+
+	{% for post in search %}
+        <hr/>
+        <p>Title bài viết: {{ post.title }}</p>
+        <a href="{{ url_for('show_post', slug=post.slug) }}">Xem bài viết này</a>
+	{% endfor %}
+{% endif %}
+{% endblock %}

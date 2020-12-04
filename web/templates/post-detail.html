@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block detail %}
+
+{% if post %}
+  <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <h3 class="panel-title">Edit post</h3>
+      </div>
+      <div class="panel-body">
+        <form method="POST" action="/update/{{post.id}}">
+          <div class="form-group">
+            <label>Title: </label>
+            <input type="text" class="form-control" name="title" placeholder="Title" value="{{ post.title }}" />
+          </div>
+          <div class="form-group">
+            <label>Content: </label>
+            <textarea class="form-control" name="content" rows="15" placeholder="Content" >{{post.content}}</textarea>
+          </div>
+          <div class="form-group">
+            <label>Status: </label>
+          </div>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" name="is_active" value={{post.is_active}} checked={{post.is_active}} />
+              Available
+            </label>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-10">
+              <button type="submit" class="btn btn-primary mr-10">Submit</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% if post == None %}
+  <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        <h3 class="panel-title">Add new post</h3>
+      </div>
+      <div class="panel-body">
+        <form method="POST" action="/add">
+          <div class="form-group">
+            <label>Title: </label>
+            <input type="text" class="form-control" name="title" placeholder="Title" />
+          </div>
+          <div class="form-group">
+            <label>Content: </label>
+            <textarea class="form-control" name="content" rows="15" placeholder="Content" ></textarea>
+          </div>
+          <div class="form-group">
+            <label>Status: </label>
+          </div>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" name="is_active" />
+              Available
+            </label>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-10">
+              <button type="submit" class="btn btn-primary mr-10">Submit</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
