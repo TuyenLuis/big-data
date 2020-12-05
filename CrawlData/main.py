@@ -27,20 +27,24 @@ page = 1
 #                 'title': post['title'],
 #                 'slug': post['slug'],
 #                 'url': post['url'],
-#                 'content': post['contents']
+#                 'content': post['contents'],
+#                 'views_count': post['views_count'] if post['views_count'] else 0,
+#                 'is_active': True
 #             })
 #
-#         page += 1
-#         sleep(0.1)
-#
-#         if page % 50 == 0:
-#             print("page: ",page)
-#             # print("col count: ")
-#             # print(col.count())
 #     except Exception as e:
 #         print("error:")
 #         print(e)
 #         continue
+#     finally:
+#         page += 1
+#         sleep(0.1)
+#
+#         if page % 50 == 0:
+#             print("page: ", page)
+#             # print("col count: ")
+#             # print(col.count())
+
 #ls
 #%%
 from src.utils import markdown_to_text
@@ -124,7 +128,7 @@ id2word.filter_extremes(no_below=10, no_above=0.25)
 id2word.compactify()
 
 #map giữa index với từ .
-id2word.save('F:/Project/Recommender_System_LDA_Viblo/models/id2word.dict')
+id2word.save('F:/Project/big-data/models/id2word.dict')
 len(id2word)
 # %%
 for i in range(10):
@@ -139,9 +143,9 @@ cospus = StreamCorpus(sentences, id2word)
 
 # save corpus
 # map giữ index với tần số của từ
-gensim.corpora.MmCorpus.serialize('F:/Project/Recommender_System_LDA_Viblo/models/corpus.mm', cospus)
+gensim.corpora.MmCorpus.serialize('F:/Project/big-data/models/corpus.mm', cospus)
 # %%
-corpus = gensim.corpora.MmCorpus('F:/Project/Recommender_System_LDA_Viblo/models/corpus.mm')
+corpus = gensim.corpora.MmCorpus('F:/Project/big-data/models/corpus.mm')
 # %%
 # số topic = 64 , quy định ma trận documents x topics tương ứng 64 chiều.
 lda_model = gensim.models.ldamodel.LdaModel(corpus, id2word=id2word, num_topics=64, passes=10,
@@ -149,7 +153,7 @@ lda_model = gensim.models.ldamodel.LdaModel(corpus, id2word=id2word, num_topics=
                                             minimum_probability=0.0, per_word_topics=False)
 # %%
 # save lda.model để sử dụng, mỗi 1 topic có các words với xác suất xuất hiện của nó .
-lda_model.save('F:/Project/Recommender_System_LDA_Viblo/models/LDA.model')
+lda_model.save('F:/Project/big-data/models/LDA.model')
 lda_model.print_topics(10)
 
 # %%
@@ -166,5 +170,5 @@ doc_topic_dist.shape
 import joblib
 
 # %%
-joblib.dump(doc_topic_dist, 'F:/Project/Recommender_System_LDA_Viblo/models/doc_topic_dist.dat')
+joblib.dump(doc_topic_dist, 'F:/Project/big-data/models/doc_topic_dist.dat')
 # %%

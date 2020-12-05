@@ -13,7 +13,7 @@ logging.root.level = logging.INFO
 
 
 # lấy các stopwords vào mảng để so sánh
-with open(r"F:\Project\Recommender_System_LDA_Viblo\data\vni_stopwords.txt",encoding="utf8") as f:
+with open(r"F:\Project\big-data\data\vni_stopwords.txt",encoding="utf8") as f:
     stopwords = []
     for line in f:
         stopwords.append("_".join(line.strip().split()))

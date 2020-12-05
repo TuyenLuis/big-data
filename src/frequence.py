@@ -9,7 +9,7 @@ logging.basicConfig(format='%(levelname)s : %(message)s', level=logging.INFO)
 logging.root.level = logging.INFO
 fmt_url = 'https://api.viblo.asia/posts?page={}'
 client = MongoClient('localhost', 27017)
-db = client['rsframgia']
+db = client['manage_post']
 col = db['viblo_posts']
 page = 1
 
