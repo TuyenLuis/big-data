@@ -10,6 +10,11 @@
         </div>
     </form>
 </div>
+<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+    <div>
+        <a class="btn btn-primary" href="/posts/add-new">Thêm mới</a>
+    </div>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -24,8 +29,9 @@
               <tr>
                 <th>Id</th>
                 <th>Title</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
+                <th style="white-space: nowrap;">Số lượt xem</th>
+                <th style="white-space: nowrap;">Trạng thái</th>
+                <th style="white-space: nowrap;">Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -34,6 +40,9 @@
                         <td>{{random_post.idrs + 1}}</td>
                         <td>
                             <a href="{{ url_for('show_post', slug=random_post.slug) }}">{{random_post.title}}</a>
+                        </td>
+                        <td>
+                            <span class="label label-success">{{ random_post.views_count }}</span>
                         </td>
                         <td>
                             {% if random_posts.status == false %}
@@ -60,13 +69,28 @@
             <div class="panel-footer" style="display: flex; justify-content: flex-end;">
                 <ul class="pagination justify-content-end">
                     <li class="page-item {{'disabled' if current_page == 1 else ''}}">
-                    <a class="page-link" href="/posts?page={{ current_page - 1}}" tabindex="-1">Previous</a>
+                        {% if is_top == True %}
+                            <a class="page-link" href="/posts/top?page={{ current_page - 1}}" tabindex="-1">Previous</a>
+                        {%endif%}
+                        {% if is_top == False %}
+                            <a class="page-link" href="/posts?page={{ current_page - 1}}" tabindex="-1">Previous</a>
+                        {%endif%}
                     </li>
                     {%for i in range(0, 10)%}
-                        <li class="page-item {{'active' if current_page == ( ((current_page - 1 if current_page % 10 == 0 else current_page) // 10) * 10 + i + 1 ) else ''}}"><a class="page-link" href="/posts?page={{ ((current_page - 1 if current_page % 10 == 0 else current_page) // 10) * 10 + i + 1 }}">{{ ((current_page - 1 if current_page % 10 == 0 else current_page) // 10) * 10 + i + 1 }}</a></li>
+                        {% if is_top == True %}
+                            <li class="page-item {{'active' if current_page == ( ((current_page - 1 if current_page % 10 == 0 else current_page) // 10) * 10 + i + 1 ) else ''}}"><a class="page-link" href="/posts/top?page={{ ((current_page - 1 if current_page % 10 == 0 else current_page) // 10) * 10 + i + 1 }}">{{ ((current_page - 1 if current_page % 10 == 0 else current_page) // 10) * 10 + i + 1 }}</a></li>
+                        {%endif%}
+                        {% if is_top == False %}
+                            <li class="page-item {{'active' if current_page == ( ((current_page - 1 if current_page % 10 == 0 else current_page) // 10) * 10 + i + 1 ) else ''}}"><a class="page-link" href="/posts?page={{ ((current_page - 1 if current_page % 10 == 0 else current_page) // 10) * 10 + i + 1 }}">{{ ((current_page - 1 if current_page % 10 == 0 else current_page) // 10) * 10 + i + 1 }}</a></li>
+                        {%endif%}
                     {%endfor%} 
                     <li class="page-item">
-                        <a class="page-link" href="/posts?page={{ current_page + 1}}">Next</a>
+                        {% if is_top == True %}
+                            <a class="page-link" href="/posts/top?page={{ current_page + 1}}">Next</a>
+                        {%endif%}
+                        {% if is_top == False %}
+                            <a class="page-link" href="/posts?page={{ current_page + 1}}">Next</a>
+                        {%endif%}
                     </li>
                 </ul>
             </div>

@@ -2,7 +2,7 @@ import os
 import logging
 import random
 from markdownify import markdownify
-
+import pandas as pd
 from flask import Flask, jsonify, render_template, redirect
 import numpy as np
 import pymongo
@@ -95,12 +95,36 @@ def show_posts():
             "title": post["title"],
             "slug": post["slug"],
             "id": post["_id"],
-            "is_active": post["is_active"]
+            "is_active": post["is_active"],
+            "views_count": post["views_count"]
         }
         for post in posts
     ]
-    return render_template('list-post.html', random_posts=random_posts, total_post=total_post, current_page=current_page)
+    return render_template('list-post.html', random_posts=random_posts, total_post=total_post, current_page=current_page, is_top=False)
 
+
+@app.route('/posts/top', methods=["GET"])
+def view_top_posts():
+    current_page = request.args.get('page')
+    if current_page == None:
+        current_page = 1
+    else:
+        current_page = int(current_page)
+    total_post = mongo_col.count({"views_count": {"$gt": 10000}})
+    posts = mongo_col.find({"views_count": {"$gt": 10000}}).sort("views_count").skip((current_page - 1) * 30).limit(30)
+    random_posts = [
+        {
+            "idrs": post["idrs"],
+            "url": post["url"],
+            "title": post["title"],
+            "slug": post["slug"],
+            "id": post["_id"],
+            "is_active": post["is_active"],
+            "views_count": post["views_count"]
+        }
+        for post in posts
+    ]
+    return render_template('list-post.html', random_posts=random_posts, total_post=total_post, current_page=current_page, is_top=True)
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
@@ -109,57 +133,97 @@ def search():
     else:
         search_text = request.args.get('search')
 
-    print('search text : ', search_text)
-    posts = mongo_col.find({
-        "title": {
-            "$regex": search_text
-        }
-    }).sort("title").limit(30)
-    random_posts = [
-        {
-            "idrs": post["idrs"],
-            "url": post["url"],
-            "title": post["title"],
-            "slug": post["slug"],
-            "id": post["_id"],
-            "is_active": post["is_active"]
-        }
-        for post in posts
-    ]
+    if request.args.get('is_content') is None:
+        posts = mongo_col.find({
+            "title": {
+                "$regex": search_text
+            }
+        }).sort("title").limit(30)
+        random_posts = [
+            {
+                "idrs": post["idrs"],
+                "url": post["url"],
+                "title": post["title"],
+                "slug": post["slug"],
+                "id": post["_id"],
+                "is_active": post["is_active"],
+                "views_count": post["views_count"]
+            }
+            for post in posts
+        ]
+    else:
+        content = markdown_to_text(search_text)
+        text_corpus = make_texts_corpus([content])
+        bow = id2word.doc2bow(next(text_corpus))
+        doc_distribution = np.array(
+            [doc_top[1] for doc_top in lda_model.get_document_topics(bow=bow)]
+        )
+        # recommender posts
+        most_sim_ids = list(get_most_similar_documents(
+            doc_distribution, doc_topic_dist))[1:]
+
+        most_sim_ids = [int(id_) for id_ in most_sim_ids]
+        posts = mongo_col.find({"idrs": {"$in": most_sim_ids}})
+        random_posts = [
+                            {
+                                "idrs": post["idrs"],
+                                "url": post["url"],
+                                "title": post["title"],
+                                "slug": post["slug"],
+                                "id": post["_id"],
+                                "is_active": post["is_active"],
+                                "views_count": post["views_count"]
+                            }
+                            for post in posts
+                        ][1:]
     return render_template('list-post.html', random_posts=random_posts)
 
-    # content = markdown_to_text(search_text)
-    # text_corpus = make_texts_corpus([content])
-    # bow = id2word.doc2bow(next(text_corpus))
-    # doc_distribution = np.array(
-    #     [doc_top[1] for doc_top in lda_model.get_document_topics(bow=bow)]
-    # )
-    # # recommender posts
-    # most_sim_ids = list(get_most_similar_documents(
-    #     doc_distribution, doc_topic_dist))[1:]
 
-    # most_sim_ids = [int(id_) for id_ in most_sim_ids]
-    # posts = mongo_col.find({"idrs": {"$in": most_sim_ids}})
-    # related_posts = [
-    #                     {
-    #                         "url": post["url"],
-    #                         "title": post["title"],
-    #                         "slug": post["slug"]
-    #                     }
-    #                     for post in posts
-    #                 ][1:]
     # return render_template('search.html',search=related_posts)
 
 @app.route('/posts/<slug>', methods=["GET"])
 def show_post(slug):
     main_post = mongo_col.find_one({"slug": slug})
-    # md = get_content_of_post(slug)
+    mongo_col.update_one({"_id": ObjectId(main_post["_id"])}, {"$set": {"views_count": main_post["views_count"] + 1}})
+
+    data = pd.read_csv("../src/preprocessing/major_word.csv")
+    features = data.values
+    tags = []
+    dictionary = []
+    for dic in features:
+        if dic[1] >= 2000:
+            dictionary.append([dic[0], dic[1]])
+    dictionary = np.array(dictionary)
+
+    text = main_post["content"]
+    content_list = text.split()
+    for content in list(set(content_list)):
+        if content in dictionary[:, 0]:
+            text = [
+                {
+                    "text": word[0],
+                    "total": int(word[1])
+                }
+                for word in dictionary if word[0] == content
+            ]
+            tags.append(text[0])
+
+    print(tags)
     main_post = {
         "url": main_post["url"],
         "title": main_post["title"],
         "slug": main_post["slug"],
+        # "content": md2html(text),
         "content": md2html(main_post["content"])
     }
+
+    # # md = get_content_of_post(slug)
+    # main_post = {
+    #     "url": main_post["url"],
+    #     "title": main_post["title"],
+    #     "slug": main_post["slug"],
+    #     "content": md2html(main_post["content"])
+    # }
 
     # preprocessing
     content = markdown_to_text(main_post["content"])
@@ -169,8 +233,6 @@ def show_post(slug):
     doc_distribution = np.array(
         [doc_top[1] for doc_top in lda_model.get_document_topics(bow=bow)]
     )
-
-    print("doc_distribution", doc_distribution)
 
     # recommender posts
     most_sim_ids = list(get_most_similar_documents(
@@ -182,45 +244,49 @@ def show_post(slug):
         {
             "url": post["url"],
             "title": post["title"],
-            "slug": post["slug"]
+            "slug": post["slug"],
         }
         for post in posts
     ][1:]
 
     return render_template(
-        'index.html', main_post=main_post, posts=related_posts
+        'index.html', main_post=main_post, posts=related_posts, tags=tags
     )
 
 @app.route('/add', methods=['POST'])
 def add_post():
-    title = request.form['title']
-    content = request.form['content']
-    is_active = request.form['is_active']
-    pp_content = markdown_to_text(content)
-    slug = get_random_string(11)
-    idrs = mongo_col.count()
-    main_post = mongo_col.insert_one({
-        'id': '',
-        'title': title,
-        'slug': slug,
-        'url': '',
-        'content': markdownify(content),
-        'idrs': idrs,
-        'pp_content': pp_content,
-        'is_active': is_active
-    })
+    try:
+        title = request.form['title']
+        content = request.form['content']
+        is_active = 'is_active' in request.form
+        pp_content = markdown_to_text(content)
+        slug = get_random_string(11)
+        idrs = mongo_col.count()
+        main_post = mongo_col.insert_one({
+            'id': '',
+            'title': title,
+            'slug': slug,
+            'url': '',
+            'content': markdownify(content),
+            'idrs': idrs,
+            'pp_content': pp_content,
+            'is_active': is_active,
+            'views_count': 0
+        })
 
-    return render_template(
-        'index.html', main_post=main_post
-    )
+        return redirect("/posts/" + slug)
+    except Exception as e:
+        print(e)
+        return render_template('not-found.html')
 
 @app.route('/update/<id>', methods=['POST'])
 def update_post(id):
     title = request.form['title']
     content = request.form['content']
+    is_active = 'is_active' in request.form
     pp_content = markdown_to_text(content)
 
-    mongo_col.update_one({"_id": id}, {"$set": {
+    mongo_col.update_one({"_id": ObjectId(id)}, {"$set": {
         "title": title,
         "content": content,
         "pp_content": pp_content
@@ -228,22 +294,23 @@ def update_post(id):
 
     main_post = mongo_col.find_one({"_id": ObjectId(id)})
 
-    return render_template(
-        'index.html', main_post=main_post
-    )
+    return redirect("/posts/" + main_post["slug"])
 
 @app.route('/delete/<id>', methods=['POST'])
 def delete_post(id):
-    mongo_col.delete_one({"_id": id})
-
+    mongo_col.delete_one({"_id": ObjectId(id)})
     return redirect("/posts")
 
 
+@app.route('/posts/add-new', methods=["GET"])
 @app.route('/posts/detail/<id>', methods=["GET"])
-def get_detail(id):
-    post = mongo_col.find_one({"_id": ObjectId(id)})
-    if post == None:
+def get_detail(id = None):
+    if id is None:
         return render_template('post-detail.html', post=None)
+
+    post = mongo_col.find_one({"_id": ObjectId(id)})
+    if post is None:
+        return render_template('not-found.html')
 
     print(md2html(post["content"]))
     post = {

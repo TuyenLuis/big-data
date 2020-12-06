@@ -2,11 +2,9 @@
 
 {% block post_content %}
 {% if main_post %}
-	<h2>Bài viết ban đầu</h2>
+	<h2>{{ main_post.title }}</h2>
     <hr/>
-	<p>{{ main_post.title }}</p>
     <div>{{ main_post.content | safe }}</div>
-
     <br>
 	<a href="{{ main_post.url }}">Xem bài viết tại trang viblo</a>
     <hr/>
@@ -26,6 +24,31 @@
                 <a href="{{ url_for('show_post', slug=post.slug) }}">Xem bài viết này</a>
                 <br/>
                 <hr/>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h2 class="panel-title">Các tags liên quan</h2>
+        </div>
+        <div class="panel-body tags-related">
+            {% for tag in tags %}
+                {% if tag.total >= 2000 and tag.total < 5000 %}
+                    <a class="tag-25" href="/search?search={{tag.text}}&is_content=1">&nbsp;{{tag.text}}</a>
+                {% endif %}
+                {% if tag.total >= 5000 and tag.total < 7000 %}
+                    <a class="tag-57" href="/search?search={{tag.text}}&is_content=1">&nbsp;{{tag.text}}</a>
+                {% endif %}
+                {% if tag.total >= 7000 and tag.total < 10000 %}
+                    <a class="tag-710" href="/search?search={{tag.text}}&is_content=1">&nbsp;{{tag.text}}</a>
+                {% endif %}
+                {% if tag.total >= 10000 and tag.total < 20000 %}
+                    <a class="tag-12" href="/search?search={{tag.text}}&is_content=1">&nbsp;{{tag.text}}</a>
+                {% endif %}
+                {% if tag.total >= 20000 %}
+                    <a class="tag-2x" href="/search?search={{tag.text}}&is_content=1">&nbsp;{{tag.text}}</a>
+                {% endif %}
             {% endfor %}
         </div>
     </div>
